@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:yes_or_no_app/domain/message.dart';
+import 'package:yes_or_no_app/providers/chat_provider.dart';
+import 'package:yes_or_no_app/widgets/chat/my_message_bubble.dart';
+import 'package:yes_or_no_app/widgets/chat/other_message_bubble.dart';
+import 'package:yes_or_no_app/widgets/input/message_field_box.dart';
 
 class ChatScreen extends StatelessWidget {
   const ChatScreen({super.key});
@@ -18,7 +24,7 @@ class ChatScreen extends StatelessWidget {
           ),
         ),
         title: Text("El Gopher"),
-        centerTitle: false
+        centerTitle: false,
       ),
       body: _ChatView(),
     );
@@ -26,11 +32,9 @@ class ChatScreen extends StatelessWidget {
 }
 
 class _ChatView extends StatelessWidget {
-  List<String> messages = ['Hola', 'Adios'];
-
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final chatProvider = context.watch<ChatProvider>();
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.all(8),
@@ -40,33 +44,20 @@ class _ChatView extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 2),
                 child: ListView.builder(
-                  itemCount: messages.length,
+                  controller: chatProvider.chatScrollController,
+                  itemCount: chatProvider.messages.length,
                   itemBuilder: (context, index) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.end, //cross
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                            child: Text(
-                              messages[index],
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 5),
-                      ],
-                    );
+                    Message message = chatProvider.messages[index];
+                    if (message.fromWho == FromWho.me) {
+                      return MyMessageBubble(message: message);
+                    }
+                    return OtherMessageBubble(message: message);
                   },
                 ),
               ),
+            ),
+            MessageFieldBox(
+              onValue: chatProvider.sendMessage,
             ),
           ],
         ),
